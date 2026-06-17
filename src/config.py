@@ -1,6 +1,6 @@
 # Dataset
 
-DATA_ROOT = "/scratch/vp91/zxw900/applied_ml/data/chest_xray"
+DATA_ROOT = "/g/data/vp91/Training-Data/chest_xray"
 
 LABELS = [
     "PNEUMONIA",
