@@ -30,9 +30,9 @@ def log(msg):
 
 def main():
 
-    log("Starting training script...")
-
     local_rank = setup_ddp()
+
+    log("Starting training script...")
     log(f"DDP initialized | local_rank={local_rank}")
 
     device = torch.device(f"cuda:{local_rank}")
