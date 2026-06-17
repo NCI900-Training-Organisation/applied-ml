@@ -3,101 +3,81 @@ import os
 import torch
 import torch.nn as nn
 
-from torch.nn.parallel import (
-    DistributedDataParallel as DDP
-)
-
-from torch.utils.data import (
-    DataLoader
-)
-
-from torch.utils.data.distributed import (
-    DistributedSampler
-)
-
-from torch.optim.lr_scheduler import (
-    ReduceLROnPlateau
-)
+from torch.nn.parallel import DistributedDataParallel as DDP
+from torch.utils.data import DataLoader
+from torch.utils.data.distributed import DistributedSampler
+from torch.optim.lr_scheduler import ReduceLROnPlateau
 
 from config import *
 
-from distributed.ddp import (
-    setup_ddp,
-    cleanup_ddp,
-    is_main_process
-)
+from distributed.ddp import setup_ddp, cleanup_ddp, is_main_process
 
-from models.pneumonia_cnn import (
-    PneumoniaCNN
-)
+from models.pneumonia_cnn import PneumoniaCNN
+from data.dataset import PneumoniaDataset
+from data.transforms import train_transform, eval_transform
 
-from data.dataset import (
-    PneumoniaDataset
-)
+from training.train_epoch import train_epoch
+from training.evaluate import evaluate
 
-from data.transforms import (
-    train_transform,
-    eval_transform
-)
 
-from training.train_epoch import (
-    train_epoch
-)
-
-from training.evaluate import (
-    evaluate
-)
+# -------------------------
+# Logging helper (DDP safe)
+# -------------------------
+def log(msg):
+    if is_main_process():
+        print(msg, flush=True)
 
 
 def main():
 
-    local_rank = setup_ddp()
+    log("Starting training script...")
 
-    device = torch.device(
-        f"cuda:{local_rank}"
-    )
+    local_rank = setup_ddp()
+    log(f"DDP initialized | local_rank={local_rank}")
+
+    device = torch.device(f"cuda:{local_rank}")
+    log(f"Device set to {device}")
+
+    # -------------------------
+    # Dataset loading
+    # -------------------------
+    log("Loading datasets...")
 
     train_dataset = PneumoniaDataset(
-        os.path.join(
-            DATA_ROOT,
-            "train"
-        ),
+        os.path.join(DATA_ROOT, "train"),
         transform=train_transform
     )
 
     val_dataset = PneumoniaDataset(
-        os.path.join(
-            DATA_ROOT,
-            "val"
-        ),
+        os.path.join(DATA_ROOT, "val"),
         transform=eval_transform
     )
 
     test_dataset = PneumoniaDataset(
-        os.path.join(
-            DATA_ROOT,
-            "test"
-        ),
+        os.path.join(DATA_ROOT, "test"),
         transform=eval_transform
     )
 
-    train_sampler = DistributedSampler(
-        train_dataset,
-        shuffle=True,
-        drop_last=True
+    log(
+        f"Dataset sizes | "
+        f"train={len(train_dataset)} "
+        f"val={len(val_dataset)} "
+        f"test={len(test_dataset)}"
     )
 
-    val_sampler = DistributedSampler(
-        val_dataset,
-        shuffle=False,
-        drop_last=True
-    )
+    # -------------------------
+    # Samplers
+    # -------------------------
+    log("Creating DistributedSamplers...")
 
-    test_sampler = DistributedSampler(
-        test_dataset,
-        shuffle=False,
-        drop_last=True
-    )
+    train_sampler = DistributedSampler(train_dataset, shuffle=True, drop_last=True)
+    val_sampler = DistributedSampler(val_dataset, shuffle=False, drop_last=True)
+    test_sampler = DistributedSampler(test_dataset, shuffle=False, drop_last=True)
+
+    # -------------------------
+    # DataLoaders
+    # -------------------------
+    log("Creating DataLoaders...")
 
     train_loader = DataLoader(
         train_dataset,
@@ -126,15 +106,29 @@ def main():
         persistent_workers=True
     )
 
-    model = PneumoniaCNN().to(
-        device
-    )
+    log("DataLoaders ready")
+
+    # -------------------------
+    # Model
+    # -------------------------
+    log("Initializing model...")
+
+    model = PneumoniaCNN().to(device)
+
+    log("Wrapping model with DDP...")
 
     model = DDP(
         model,
         device_ids=[local_rank],
         output_device=local_rank
     )
+
+    log("Model ready in DDP mode")
+
+    # -------------------------
+    # Loss / Optim / Scheduler
+    # -------------------------
+    log("Setting up loss, optimizer, scheduler...")
 
     criterion = nn.BCEWithLogitsLoss()
 
@@ -151,10 +145,19 @@ def main():
         min_lr=1e-6
     )
 
+    log("Training components initialized")
+
+    # -------------------------
+    # Training loop
+    # -------------------------
     for epoch in range(NUM_EPOCHS):
 
-        train_sampler.set_epoch(epoch)
+        log(f"Epoch {epoch+1}/{NUM_EPOCHS} starting")
 
+        train_sampler.set_epoch(epoch)
+        log("Sampler epoch set")
+
+        log("Training started")
         train_loss, train_acc = train_epoch(
             model,
             train_loader,
@@ -163,6 +166,9 @@ def main():
             device
         )
 
+        log(f"Train done | loss={train_loss:.4f}, acc={train_acc:.4f}")
+
+        log("Validation started")
         val_loss, val_acc = evaluate(
             model,
             val_loader,
@@ -170,27 +176,29 @@ def main():
             device
         )
 
+        log(f"Validation done | loss={val_loss:.4f}, acc={val_acc:.4f}")
+
         scheduler.step(val_acc)
 
-        if is_main_process():
+        log("Saving checkpoint")
 
-            print(
-                f"Epoch [{epoch+1}/{NUM_EPOCHS}] "
-                f"Train Loss={train_loss:.4f} "
-                f"Train Acc={train_acc:.4f} "
-                f"Val Loss={val_loss:.4f} "
-                f"Val Acc={val_acc:.4f}"
+        if is_main_process():
+            torch.save(
+                {
+                    "model": model.module.state_dict(),
+                    "optimizer": optimizer.state_dict(),
+                    "epoch": epoch,
+                    "val_acc": val_acc
+                },
+                "pneumonia_model.pt"
             )
 
-            torch.save(
-            {
-                "model": model.module.state_dict(),
-                "optimizer": optimizer.state_dict(),
-                "epoch": epoch,
-                "val_acc": val_acc
-            },
-            "pneumonia_model.pt"
-        )
+        log("Checkpoint saved")
+
+    # -------------------------
+    # Final evaluation
+    # -------------------------
+    log("Running final test evaluation")
 
     test_loss, test_acc = evaluate(
         model,
@@ -200,16 +208,14 @@ def main():
     )
 
     if is_main_process():
+        print(f"Test Loss = {test_loss:.4f}")
+        print(f"Test Accuracy = {test_acc * 100:.2f}%")
 
-        print(
-            f"Test Loss={test_loss:.4f}"
-        )
-
-        print(
-            f"Test Accuracy={test_acc*100:.2f}%"
-        )
+    log("Cleaning up DDP")
 
     cleanup_ddp()
+
+    log("Training complete")
 
 
 if __name__ == "__main__":
