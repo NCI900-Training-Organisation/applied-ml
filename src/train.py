@@ -182,6 +182,16 @@ def main():
                 f"Val Acc={val_acc:.4f}"
             )
 
+            torch.save(
+            {
+                "model": model.module.state_dict(),
+                "optimizer": optimizer.state_dict(),
+                "epoch": epoch,
+                "val_acc": val_acc
+            },
+            "pneumonia_model.pt"
+        )
+
     test_loss, test_acc = evaluate(
         model,
         test_loader,

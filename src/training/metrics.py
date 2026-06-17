@@ -41,7 +41,7 @@ def reduce_sum(
     #   - result is written back to EVERY GPU
     dist.all_reduce(
         tensor,
-        op=dist.ReduceOp.SUM #tells PyTorch what kind of reduction operation to perform during distributed communication.
+        op=dist.ReduceOp.SUM # tells PyTorch what kind of reduction operation to perform during distributed communication.
     )
 
     # Convert back to Python scalar for logging / metrics
