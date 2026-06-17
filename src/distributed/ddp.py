@@ -17,6 +17,11 @@ def setup_ddp():
     # - "gloo" = fallback for CPU or non-NVIDIA setups
     backend = "nccl" if torch.cuda.is_available() else "gloo"
 
+
+    print("RANK =", os.environ.get("RANK"))
+    print("WORLD_SIZE =", os.environ.get("WORLD_SIZE"))
+    print("LOCAL_RANK =", os.environ.get("LOCAL_RANK"))
+
     # Initialize the default process group.
     # This is what enables communication (gradient sync, broadcasts, etc.)
     # between all GPU processes.
