@@ -220,7 +220,7 @@ __marimo__/
 
 # Model saving
 
-src/training/pneumonia.pt
+job_script/pneumonia_model*.pt
 
 
 job_script/*.o*

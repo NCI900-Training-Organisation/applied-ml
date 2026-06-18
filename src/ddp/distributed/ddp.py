@@ -55,6 +55,8 @@ def cleanup_ddp():
     dist.destroy_process_group()
 
 
+
+
 def is_main_process():
     """
     In DDP, multiple processes run the same code.
@@ -63,5 +65,23 @@ def is_main_process():
     - logs output
     - saves checkpoints
     - avoids duplicate printing
+
+    Returns
+    -------
+    bool
+        True if this process is rank 0.
+
+    Notes
+    -----
+    If distributed training has not been initialized,
+    return True so the function also works in
+    single-GPU and CPU-only training.
     """
+
+    if not dist.is_available():
+        return True
+
+    if not dist.is_initialized():
+        return True
+
     return dist.get_rank() == 0

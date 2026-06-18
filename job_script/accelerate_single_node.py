@@ -16,4 +16,4 @@ module load cuda/12.3.2
 
 . /g/data/vp91/Training-Venvs/pytorch/bin/activate
 
-torchrun --nproc_per_node=2 /scratch/vp91/$USER/applied-ml/src/train.py
+accelerate launch --num_processes=2  /scratch/vp91/$USER/applied-ml/src/accelerate/train.py

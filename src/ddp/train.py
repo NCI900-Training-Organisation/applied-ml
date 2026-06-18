@@ -19,6 +19,9 @@ from data.transforms import train_transform, eval_transform
 from training.train_epoch import train_epoch
 from training.evaluate import evaluate
 
+from config import (
+    SAVE_PATH
+)
 
 # -------------------------
 # Logging helper (DDP safe)
@@ -183,14 +186,16 @@ def main():
         log("Saving checkpoint")
 
         if is_main_process():
+            
+
             torch.save(
                 {
                     "model": model.module.state_dict(),
                     "optimizer": optimizer.state_dict(),
                     "epoch": epoch,
-                    "val_acc": val_acc
+                    "val_acc": val_acc,
                 },
-                "pneumonia_model.pt"
+                SAVE_PATH,
             )
 
         log("Checkpoint saved")

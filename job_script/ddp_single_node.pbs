@@ -1,0 +1,31 @@
+#!/bin/bash
+
+#PBS -P vp91
+#PBS -q gpuvolta
+#PBS -l ncpus=24
+#PBS -l ngpus=2
+#PBS -l mem=64GB
+#PBS -l walltime=02:00:00
+#PBS -l storage=scratch/vp91+gdata/vp91
+#PBS -N ddp_single_train
+
+
+set -euo pipefail
+
+module purge
+module load python3/3.11.0
+module load cuda/11.7.0
+module load intel-mkl/2022.2.0
+
+export PYTHONUNBUFFERED=1
+export NCCL_DEBUG=INFO
+export TORCH_DISTRIBUTED_DEBUG=DETAIL
+export OMP_NUM_THREADS=4
+
+source /scratch/vp91/pytorch-venv/bin/activate
+
+echo "Starting job training..."
+
+torchrun --standalone --nproc-per-node=2  /scratch/vp91/$USER/applied-ml/src/ddp/train.py
+
+echo "Job done..."

@@ -1,0 +1,29 @@
+#PBS -l ngpus=8
+#PBS -l ncpus=96
+#PBS -l walltime=01:00:00
+
+module load python3/3.11.0
+module load cuda/12.3.2
+source /g/data/vp91/Training-Venvs/pytorch/bin/activate
+
+NNODES=$(wc -l < $PBS_NODEFILE)
+GPUS_PER_NODE=4
+MASTER_ADDR=$(head -n 1 $PBS_NODEFILE)
+MASTER_PORT=29500
+
+echo "NNODES=$NNODES"
+
+# Launch ONE torchrun per node
+cat $PBS_NODEFILE | uniq | while read NODE; do
+  ssh $NODE "
+    torchrun \
+      --nnodes=$NNODES \
+      --nproc_per_node=$GPUS_PER_NODE \
+      --node_rank=\$(grep -n $NODE $PBS_NODEFILE | cut -d: -f1 | head -n1 | xargs -I{} echo {}-1) \
+      --master_addr=$MASTER_ADDR \
+      --master_port=$MASTER_PORT \
+      /scratch/vp91/$USER/applied-ml/src/ddp/train.py
+  " &
+done
+
+wait
