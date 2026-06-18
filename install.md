@@ -39,7 +39,7 @@ python3 -m pip install --upgrade pip
 
 ## Install Required Packages
 
-Install Jupyter and all project dependencies:
+Install Jupyter and all project dependencies. It is imoportant that the installtion happen in the same order as shown below. 
 
 
 
@@ -48,10 +48,16 @@ python3 -m pip install     jupyter==1.1.1     jupyterlab==4.2.5     numpy==1.26.
 
 python3 -m pip install torch==2.1.2+cu118 torchvision==0.16.2+cu118 torchaudio==2.1.2+cu118 --index-url https://download.pytorch.org/whl/cu118 --no-cache-dir
 
-python -c "import torch; print(torch.__version__); print(torch.version.cuda); print(torch.cuda.is_available())"
-
 python3 -m pip install accelerate==0.33.0 --no-deps --no-cache-dir
 ```
+
+You can check the version of the PyTorch version using
+
+```bash
+python -c "import torch; print(torch.__version__); print(torch.version.cuda); print(torch.cuda.is_available())"
+```
+
+The version should be compatible with the GPU we are using.
 
 ---
 
