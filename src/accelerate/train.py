@@ -13,6 +13,7 @@ from data.transforms import train_transform, eval_transform
 from training.train_epoch import train_epoch
 from training.evaluate import evaluate
 
+from torch.utils.data import DataLoader
 
 from config import (
     SAVE_PATH
@@ -32,15 +33,10 @@ def main():
         mixed_precision="fp16"
     )
 
-    print("test 1")
-
     log(accelerator, "Starting training job")
     log(accelerator, f"Number of processes: {accelerator.num_processes}")
     log(accelerator, f"Mixed precision: {accelerator.mixed_precision}")
-
     log(accelerator, "Creating datasets")
-
-    print("test 1")
 
     train_dataset = PneumoniaDataset(
         os.path.join(DATA_ROOT, "train"),
@@ -84,12 +80,11 @@ def main():
         shuffle=False
     )
 
-    log(
+    log(accelerator,
         f"Dataloaders ready | "
         f"batch_size={BATCH_SIZE}"
     )
 
-    print("test 3")
     log(accelerator, "Initializing model")
 
     model = PneumoniaCNN()
@@ -104,7 +99,6 @@ def main():
     log(accelerator, f"Optimizer: Adam (lr={LR})")
     log(accelerator, "Preparing objects with Accelerate")
 
-    print("test 4")
     model, optimizer, train_loader, val_loader = (
         accelerator.prepare(
             model,
@@ -120,14 +114,11 @@ def main():
 
     log(accelerator, f"Beginning training for {NUM_EPOCHS} epochs")
 
-    print("test 5")
     for epoch in range(NUM_EPOCHS):
 
         log(accelerator, f"Epoch {epoch + 1}/{NUM_EPOCHS} started")
 
-        print("test 6")
-
-        train_loss = train_epoch(
+        train_loss, train_acc = train_epoch(
             model,
             train_loader,
             criterion,
@@ -138,7 +129,7 @@ def main():
         log(accelerator,
             f"Epoch {epoch + 1}: "
             f"training complete "
-            f"(loss={train_loss:.4f})"
+            f"(loss={train_loss:.4f}, acc={train_acc:.4f})"
         )
 
         val_loss, val_acc = evaluate(
