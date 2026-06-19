@@ -5,7 +5,7 @@
 #PBS -l ncpus=24
 #PBS -l ngpus=2
 #PBS -l mem=64GB
-#PBS -l walltime=02:00:00
+#PBS -l walltime=00:30:00
 #PBS -l storage=scratch/vp91+gdata/vp91
 #PBS -N ddp_single_train
 
@@ -26,6 +26,6 @@ source /scratch/vp91/pytorch-venv/bin/activate
 
 echo "Starting job training..."
 
-torchrun --standalone --nproc-per-node=2  /scratch/vp91/$USER/applied-ml/src/ddp/train.py
+torchrun --standalone --nproc_per_node=2  /scratch/vp91/$USER/applied-ml/src/ddp/train.py
 
 echo "Job done..."

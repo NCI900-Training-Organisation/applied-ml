@@ -5,7 +5,7 @@
 #PBS -l ncpus=24
 #PBS -l ngpus=2
 #PBS -l mem=64GB
-#PBS -l walltime=02:00:00
+#PBS -l walltime=00:30:00
 #PBS -l storage=scratch/vp91+gdata/vp91
 #PBS -N acc_single_train
 

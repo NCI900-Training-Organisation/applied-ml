@@ -1,29 +1,47 @@
-#PBS -l ngpus=8
+#!/bin/bash
+
+#PBS -P vp91
+#PBS -q gpuvolta
 #PBS -l ncpus=96
-#PBS -l walltime=01:00:00
+#PBS -l ngpus=8
+#PBS -l mem=64GB
+#PBS -l walltime=00:15:00
+#PBS -l storage=scratch/vp91+gdata/vp91
+#PBS -N ddp_multi_train
 
+set -euo pipefail
+
+# Load modules
+module purge
 module load python3/3.11.0
-module load cuda/12.3.2
-source /g/data/vp91/Training-Venvs/pytorch/bin/activate
+module load cuda/11.7.0
+module load intel-mkl/2022.2.0
+module load openmpi
 
-NNODES=$(wc -l < $PBS_NODEFILE)
-GPUS_PER_NODE=4
-MASTER_ADDR=$(head -n 1 $PBS_NODEFILE)
-MASTER_PORT=29500
+export PYTHONUNBUFFERED=1
+export NCCL_DEBUG=INFO
+export TORCH_DISTRIBUTED_DEBUG=DETAIL
+export OMP_NUM_THREADS=4
 
-echo "NNODES=$NNODES"
 
-# Launch ONE torchrun per node
-cat $PBS_NODEFILE | uniq | while read NODE; do
-  ssh $NODE "
-    torchrun \
-      --nnodes=$NNODES \
-      --nproc_per_node=$GPUS_PER_NODE \
-      --node_rank=\$(grep -n $NODE $PBS_NODEFILE | cut -d: -f1 | head -n1 | xargs -I{} echo {}-1) \
-      --master_addr=$MASTER_ADDR \
-      --master_port=$MASTER_PORT \
-      /scratch/vp91/$USER/applied-ml/src/ddp/train.py
-  " &
+source /scratch/vp91/pytorch-venv/bin/activate
+
+NNODES=2
+PBS_NGPUS=4 
+PROC_PER_NODE=4
+ 
+MASTER_ADDR=$(cat $PBS_NODEFILE | head -n 1)
+ 
+# Launch script
+LAUNCH_SCRIPT=/scratch/vp91/$USER/applied-ml/job_script/ddp_multi_node_launcher.sh
+ 
+# Set execute permission
+chmod u+x ${LAUNCH_SCRIPT}
+ 
+# Run PyTorch application
+for inode in $(seq 1 $PBS_NCI_NCPUS_PER_NODE $PBS_NCPUS); do
+    echo $inode
+    pbsdsh -n $inode ${LAUNCH_SCRIPT} ${NNODES} ${PROC_PER_NODE} ${MASTER_ADDR} &
 done
 
 wait
