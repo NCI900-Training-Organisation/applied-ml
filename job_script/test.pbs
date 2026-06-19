@@ -1,0 +1,31 @@
+#!/bin/bash
+
+#PBS -P vp91
+#PBS -q normal
+#PBS -l ncpus=96
+#PBS -l mem=64GB
+#PBS -l walltime=00:05:00
+#PBS -l storage=scratch/vp91+gdata/vp91
+#PBS -N test
+
+MASTER_ADDR=$(cat $PBS_NODEFILE | head -n 1)
+MASTER_PORT=64646
+
+echo "==================== Distributed Launch Config ===================="
+
+echo "NUM_MACHINES      = 2"
+echo "NUM_PROCESSES     = 8"
+echo "MACHINE_RANK      = $PBS_VNODENUM"
+echo "MAIN_PROCESS_IP   = $MASTER_ADDR"
+echo "MAIN_PROCESS_PORT = $MASTER_PORT"
+echo "TRAIN SCRIPT      = train.py"
+
+echo "-------------------------------------------------------------------"
+
+
+for inode in $(seq 1 $PBS_NCI_NCPUS_PER_NODE $PBS_NCPUS); do
+    echo $inode
+    pbsdsh -n $inode ${LAUNCH_SCRIPT} ${NNODES} ${PROC_PER_NODE} ${MASTER_ADDR} &
+done
+
+echo "Full accelerate command:"

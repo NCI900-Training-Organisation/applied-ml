@@ -7,7 +7,7 @@
 #PBS -l mem=64GB
 #PBS -l walltime=00:15:00
 #PBS -l storage=scratch/vp91+gdata/vp91
-#PBS -N ddp_multi_train
+#PBS -N acc_multi_train
 
 set -euo pipefail
 
@@ -16,7 +16,6 @@ module purge
 module load python3/3.11.0
 module load cuda/11.7.0
 module load intel-mkl/2022.2.0
-module load openmpi
 
 export PYTHONUNBUFFERED=1
 export NCCL_DEBUG=INFO
@@ -33,16 +32,26 @@ PROC_PER_NODE=4
 MASTER_ADDR=$(cat $PBS_NODEFILE | head -n 1)
  
 # Launch script
-LAUNCH_SCRIPT=/scratch/vp91/$USER/applied-ml/job_script/ddp_multi_node_launcher.sh
+LAUNCH_SCRIPT=/scratch/vp91/$USER/applied-ml/job_script/acc_multi_node_launcher.sh
  
 # Set execute permission
 chmod u+x ${LAUNCH_SCRIPT}
  
-# Run PyTorch application
+NODE_RANK=0
 for inode in $(seq 1 $PBS_NCI_NCPUS_PER_NODE $PBS_NCPUS); do
-    echo $inode
-    pbsdsh -n $inode ${LAUNCH_SCRIPT} ${NNODES} ${PROC_PER_NODE} ${MASTER_ADDR} &
+    echo "inode=${inode} rank=${NODE_RANK}"
+
+    pbsdsh -n $inode \
+        ${LAUNCH_SCRIPT} \
+        ${NNODES} \
+        ${PROC_PER_NODE} \
+        ${MASTER_ADDR} \
+        ${NODE_RANK} &
+
+    NODE_RANK=$((NODE_RANK + 1))
 done
+
+wait
 
 # seq 1 STEP END generates numbers starting at 1, incrementing by STEP.
 # STEP is the number of CPUs per node ($PBS_NCI_NCPUS_PER_NODE).
