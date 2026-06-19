@@ -5,7 +5,6 @@ source ~/.bashrc
 
 module load cuda/11.7.0
 module load intel-mkl/2022.2.0
-module load openmpi
 
 source /scratch/vp91/pytorch-venv/bin/activate
  
