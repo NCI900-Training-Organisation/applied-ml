@@ -91,30 +91,29 @@ def train_epoch(
             targets
         )
 
-        # --------------------------------------------------------------
-        # Accelerate backward pass
-        # --------------------------------------------------------------
-        #
-        # Native DDP:
+        # BACKWARD PASS (ACCELERATE):
+        # ---------------------------
+        # Native PyTorch DDP typically uses:
         #
         #     loss.backward()
         #
-        # Accelerate:
+        # Accelerate replaces this with:
         #
         #     accelerator.backward(loss)
         #
-        # Why?
-        #
-        # Accelerate can manage:
-        #
+        # This provides a single API that works for:
+        # - Single GPU
+        # - Multi-GPU (DDP)
         # - Mixed precision (fp16/bf16)
-        # - Gradient scaling
-        # - Multi-GPU synchronization
-        # - Future backend changes
         #
-        # Under the hood, when running multi-GPU,
-        # gradients are synchronized exactly like DDP.
-        # --------------------------------------------------------------
+        # When running with multiple GPUs, Accelerate
+        # still uses DDP under the hood and gradients are
+        # synchronized across GPUs during the backward pass.
+        #
+        # The main difference is that Accelerate manages
+        # backend-specific details (such as gradient scaling
+        # for mixed precision) so the training code does not
+        # need to change between hardware configurations.
         accelerator.backward(loss)
 
         # Apply synchronized gradients
@@ -141,37 +140,36 @@ def train_epoch(
             >= 0.5
         ).float()
 
-        # --------------------------------------------------------------
-        # Metric synchronization
-        # --------------------------------------------------------------
+        # METRIC SYNCHRONIZATION (ACCELERATE):
+        # ------------------------------------
+        # During multi-GPU training, each process only sees
+        # its own subset of data and therefore only has
+        # partial metrics.
         #
-        # IMPORTANT DIFFERENCE FROM DDP
-        #
-        # Suppose:
-        #
-        # GPU0 sees 256 samples
-        # GPU1 sees 256 samples
-        # GPU2 sees 256 samples
-        # GPU3 sees 256 samples
-        #
-        # Each GPU only knows its own predictions.
-        #
-        # Native DDP often requires:
+        # Native DDP typically requires explicit collective
+        # communication calls such as:
         #
         #     dist.all_gather(...)
-        #
-        # or:
-        #
         #     dist.all_reduce(...)
         #
-        # to obtain global metrics.
+        # to combine results across GPUs.
         #
-        # Accelerate provides a simpler API:
+        # Accelerate provides:
         #
         #     accelerator.gather(...)
         #
-        # which collects tensors from every process.
-        # --------------------------------------------------------------
+        # which collects tensors from all processes using a
+        # simpler, backend-independent API.
+        #
+        # Example:
+        #
+        #     GPU0 -> 256 samples
+        #     GPU1 -> 256 samples
+        #     GPU2 -> 256 samples
+        #     GPU3 -> 256 samples
+        #
+        # After gather(), metrics can be computed using the
+        # combined results from all 1024 samples.
         preds = accelerator.gather(preds)
         targets = accelerator.gather(targets)
 
