@@ -120,6 +120,40 @@ def main():
 
     log("Wrapping model with DDP...")
 
+    # WRAP MODEL WITH DDP (IMPORTANT):
+    # --------------------------------
+    # DDP (DistributedDataParallel) creates one model
+    # replica per process/GPU and handles gradient
+    # synchronization automatically.
+    #
+    # This ensures all model replicas remain identical
+    # across GPUs.
+    #
+    # device_ids specifies which GPU this process owns.
+    # For example:
+    #
+    #   local_rank = 0 → GPU0
+    #   local_rank = 1 → GPU1
+    #   local_rank = 2 → GPU2
+    #
+    # Each process only performs computation on its
+    # assigned GPU.
+    #
+    # output_device specifies where outputs from the
+    # forward pass are placed. Typically this is the
+    # same GPU assigned to the process.
+    #
+    # Example:
+    #
+    #   Process 0 → GPU0 → device_ids=[0]
+    #   Process 1 → GPU1 → device_ids=[1]
+    #   Process 2 → GPU2 → device_ids=[2]
+    #
+    # DDP does NOT split batches across GPUs. Instead,
+    # each process receives a different subset of data
+    # (usually via DistributedSampler) and trains its
+    # own model replica. Gradients are synchronized
+    # automatically during loss.backward().
     model = DDP(
         model,
         device_ids=[local_rank],
@@ -140,6 +174,16 @@ def main():
         lr=LR
     )
 
+    # Reduce learning rate when validation metric
+    # stops improving.
+    #
+    # mode="max"     -> larger metric values are better
+    # factor=0.3     -> new_lr = old_lr * 0.3
+    # patience=2     -> wait 2 epochs before reducing
+    # min_lr=1e-6    -> lower learning-rate limit
+    #
+    # Typically called as:
+    #   scheduler.step(val_metric)
     scheduler = ReduceLROnPlateau(
         optimizer,
         mode="max",
@@ -147,7 +191,7 @@ def main():
         patience=2,
         min_lr=1e-6
     )
-
+    
     log("Training components initialized")
 
     # -------------------------

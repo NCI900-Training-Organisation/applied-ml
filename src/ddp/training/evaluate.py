@@ -25,9 +25,27 @@ def evaluate(
         - Metrics are then globally reduced using all-reduce (reduce_sum).
     """
 
-    # Set model to evaluation mode:
-    # - disables dropout
-    # - uses running stats for batch norm
+    # EVALUATION MODE (IMPORTANT):
+    # ----------------------------
+    # Switches the model from training mode to inference
+    # (evaluation) mode.
+    #
+    # This changes the behavior of certain layers:
+    #
+    # - Dropout is disabled so that all activations
+    #   are used and predictions are deterministic.
+    #
+    # - BatchNorm stops updating running statistics
+    #   (mean and variance) and instead uses the
+    #   statistics learned during training.
+    #
+    # During validation/testing we want stable and
+    # reproducible predictions, so model.eval() should
+    # be called before the evaluation loop.
+    #
+    # In DDP, each GPU/process evaluates its local
+    # model replica independently, but all replicas
+    # are placed into evaluation mode.
     model.eval()
 
     # Local (per-GPU) accumulators

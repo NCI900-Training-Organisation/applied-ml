@@ -21,6 +21,15 @@ def train_epoch(
     - Metrics (loss/accuracy) must be manually reduced across GPUs.
     """
 
+    # Put model into training mode.
+    #
+    # This enables training-specific layer behavior:
+    # - Dropout randomly drops activations.
+    # - BatchNorm updates running statistics.
+    #
+    # In DDP, every process/GPU calls model.train() on its
+    # local model replica so all replicas operate in
+    # training mode.
     model.train()
 
     # These are LOCAL metrics (per GPU process)
@@ -42,7 +51,39 @@ def train_epoch(
             non_blocking=True
         )
 
-        # Clear gradients for THIS GPU/process only
+        # CLEAR GRADIENTS (IMPORTANT):
+        # ----------------------------
+        # PyTorch accumulates gradients by default.
+        #
+        # This means that every call to loss.backward()
+        # ADDS new gradients to the existing values in
+        # parameter.grad rather than replacing them.
+        #
+        # Example:
+        #
+        #   Iteration 1:
+        #     gradient = 2
+        #
+        #   Iteration 2:
+        #     gradient = 3
+        #
+        # Without optimizer.zero_grad():
+        #
+        #     parameter.grad = 2 + 3 = 5
+        #
+        # With optimizer.zero_grad():
+        #
+        #     Iteration 1 -> parameter.grad = 2
+        #     clear gradients
+        #     Iteration 2 -> parameter.grad = 3
+        #
+        # We therefore clear gradients before processing
+        # each mini-batch so that the backward pass computes
+        # gradients only for the CURRENT batch.
+        #
+        # In DDP, each GPU/process clears the gradients of
+        # its local model replica before computing the next
+        # set of gradients.
         optimizer.zero_grad()
 
         # Forward pass is independent per GPU
@@ -62,10 +103,43 @@ def train_epoch(
         #
         # This ensures every GPU ends up with identical gradients
         # before optimizer.step().
+        #
+        # Example:
+        #   GPU0 gradient = 4
+        #   GPU1 gradient = 8
+        #
+        # DDP performs an AllReduce and averages:
+        #
+        #   (4 + 8) / 2 = 6
+        #
+        # Both GPUs then have:
+        #
+        #   GPU0 gradient = 6
+        #   GPU1 gradient = 6
+        #
+        # The optimizer on every GPU therefore applies the
+        # exact same parameter update, keeping all model
+        # replicas synchronized.
         loss.backward()
 
         # Apply synchronized gradients
+        # Apply the parameter update.
+        #
+        # At this point:
+        # - loss.backward() has computed gradients.
+        # - DDP has already synchronized those gradients
+        #   across all GPUs via AllReduce.
+        #
+        # optimizer.step() uses the synchronized gradients
+        # to update the model parameters:
+        #
+        #   weight = weight - learning_rate * gradient
+        #
+        # Because every GPU has identical gradients,
+        # every process performs the same update and
+        # all model replicas remain identical.
         optimizer.step()
+
 
         # ----------------------------------------------------
         # LOCAL METRIC TRACKING (per GPU only at this stage)
