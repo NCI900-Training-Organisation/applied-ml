@@ -73,9 +73,57 @@ def main():
     # -------------------------
     log("Creating DistributedSamplers...")
 
-    train_sampler = DistributedSampler(train_dataset, shuffle=True, drop_last=True)
-    val_sampler = DistributedSampler(val_dataset, shuffle=False, drop_last=True)
-    test_sampler = DistributedSampler(test_dataset, shuffle=False, drop_last=True)
+    # DISTRIBUTED SAMPLERS (DDP):
+    # --------------------------
+    # In native PyTorch DDP, each process (GPU) must see
+    # a UNIQUE subset of the dataset.
+    #
+    # DistributedSampler handles this by splitting the
+    # dataset across all processes.
+    #
+    # Example with 4 GPUs:
+    #
+    #   GPU0 -> shard 0
+    #   GPU1 -> shard 1
+    #   GPU2 -> shard 2
+    #   GPU3 -> shard 3
+    #
+    # Without this, every GPU would see the FULL dataset,
+    # leading to duplicated computation and incorrect
+    # gradient scaling.
+    #
+    # shuffle=True (train only):
+    #   Ensures each epoch reshuffles data differently
+    #   across all shards.
+    #
+    # shuffle=False (val/test):
+    #   Keeps evaluation deterministic and consistent.
+    #
+    # drop_last=True:
+    #   Drops leftover samples that cannot be evenly
+    #   divided across GPUs.
+    #
+    #   This ensures all GPUs receive equal batch sizes,
+    #   preventing synchronization issues during DDP
+    #   training (especially for loss.backward()).
+    #
+    train_sampler = DistributedSampler(
+        train_dataset,
+        shuffle=True,
+        drop_last=True
+    )
+    
+    val_sampler = DistributedSampler(
+        val_dataset,
+        shuffle=False,
+        drop_last=True
+    )
+    
+    test_sampler = DistributedSampler(
+        test_dataset,
+        shuffle=False,
+        drop_last=True
+    )
 
     # -------------------------
     # DataLoaders
@@ -191,7 +239,7 @@ def main():
         patience=2,
         min_lr=1e-6
     )
-    
+
     log("Training components initialized")
 
     # -------------------------

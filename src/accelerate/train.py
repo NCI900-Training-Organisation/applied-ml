@@ -62,18 +62,51 @@ def main():
 
     log(accelerator, "Creating dataloaders")
 
+    # DATA LOADERS (IMPORTANT NOTE FOR ACCELERATE):
+    # --------------------------------------------
+    # Unlike native DDP setups, Accelerate does NOT
+    # require a DistributedSampler or a special
+    # distributed DataLoader.
+    #
+    # In standard DDP, you typically must do:
+    #
+    #   sampler = DistributedSampler(dataset)
+    #   DataLoader(dataset, sampler=sampler, ...)
+    #
+    # so that each GPU sees a unique shard of data.
+    #
+    # With Accelerate, this is handled automatically
+    # when you call:
+    #
+    #   accelerator.prepare(...)
+    #
+    # Accelerate internally wraps the DataLoader and
+    # applies the correct distributed sampling logic
+    # per process.
+    #
+    # This means you can define normal PyTorch
+    # DataLoaders as usual:
+    #
+    # - shuffle=True for training (handled per process)
+    # - shuffle=False for validation/testing
+    #
+    # and Accelerate ensures each GPU receives its
+    # own non-overlapping batch subset during training.
+    #
+    # So no explicit DistributedSampler is required
+    # in user code when using Accelerate.
     train_loader = DataLoader(
         train_dataset,
         batch_size=BATCH_SIZE,
         shuffle=True
     )
-
+    
     val_loader = DataLoader(
         val_dataset,
         batch_size=BATCH_SIZE,
         shuffle=False
     )
-
+    
     test_loader = DataLoader(
         test_dataset,
         batch_size=BATCH_SIZE,
