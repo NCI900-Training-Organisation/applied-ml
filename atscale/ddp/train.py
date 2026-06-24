@@ -249,6 +249,9 @@ def main():
 
         log(f"Epoch {epoch+1}/{NUM_EPOCHS} starting")
 
+        # In DistributedDataParallel (DDP), this sets the epoch for the sampler
+        # so that each process/gpu shuffles the dataset in a different but
+        # consistent way every epoch (prevents all GPUs seeing identical batches)
         train_sampler.set_epoch(epoch)
         log("Sampler epoch set")
 
@@ -273,6 +276,9 @@ def main():
 
         log(f"Validation done | loss={val_loss:.4f}, acc={val_acc:.4f}")
 
+        # Update the learning rate scheduler using the validation accuracy
+        # (typically used for ReduceLROnPlateau or similar schedulers)
+        # so that the learning rate is adjusted based on model performance
         scheduler.step(val_acc)
 
         log("Saving checkpoint")
