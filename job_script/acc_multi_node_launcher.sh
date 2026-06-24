@@ -74,7 +74,7 @@ export USER=$(whoami)
 #   Keeps execution in eager mode (more stable/debuggable).
 #
 #
-# script: /scratch/vp91/jxj900/applied-ml/src/accelerate/train.py
+# script: /scratch/vp91/jxj900/applied-ml/atscale/accelerate/train.py
 #
 # This script runs independently on each process,
 # but Accelerate ensures:
@@ -91,4 +91,4 @@ accelerate launch \
     --rdzv_backend c10d \
     --mixed_precision fp16 \
     --dynamo_backend no \
-    /scratch/vp91/jxj900/applied-ml/src/accelerate/train.py
+    /scratch/vp91/jxj900/applied-ml/atscale/accelerate/train.py

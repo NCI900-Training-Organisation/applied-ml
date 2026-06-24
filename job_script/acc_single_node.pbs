@@ -24,6 +24,6 @@ source /scratch/vp91/pytorch-venv/bin/activate
 
 echo "Starting Accelerate training..."
 
-accelerate launch --num_processes 2 /scratch/vp91/$USER/applied-ml/src/accelerate/train.py
+accelerate launch --num_processes 2 /scratch/vp91/$USER/applied-ml/atscale/accelerate/train.py
 
 echo "Job done..."

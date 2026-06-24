@@ -26,6 +26,6 @@ source /scratch/vp91/pytorch-venv/bin/activate
 
 echo "Starting job training..."
 
-torchrun --standalone --nproc_per_node=2  /scratch/vp91/$USER/applied-ml/src/ddp/train.py
+torchrun --standalone --nproc_per_node=2  /scratch/vp91/$USER/applied-ml/atscale/ddp/train.py
 
 echo "Job done..."

@@ -43,7 +43,7 @@ export USER=$(whoami)
 #   Address of the master node (rank 0) and port used
 #   for process coordination (rendezvous server).
 #
-# script: /scratch/vp91/$USER/applied-ml/src/ddp/train.py
+# script: /scratch/vp91/$USER/applied-ml/atscale/ddp/train.py
 #
 # This is the training script executed independently
 # by each spawned process. Each process runs the same
@@ -55,4 +55,4 @@ torchrun \
   --rdzv_id=100 \
   --rdzv_backend=c10d \
   --rdzv_endpoint=${3}:29400 \
-  /scratch/vp91/$USER/applied-ml/src/ddp/train.py
+  /scratch/vp91/$USER/applied-ml/atscale/ddp/train.py
