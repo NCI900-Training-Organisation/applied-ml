@@ -19,6 +19,10 @@ from config import (
     SAVE_PATH
 )
 
+
+from torch.profiler import profile, record_function, ProfilerActivity
+activities=[ProfilerActivity.CPU, ProfilerActivity.CUDA]
+
 # -------------------------
 # Logging helper (DDP safe)
 # -------------------------
@@ -147,6 +151,12 @@ def main():
 
     log(accelerator, f"Beginning training for {NUM_EPOCHS} epochs")
 
+    activities=[ProfilerActivity.CPU, ProfilerActivity.CUDA]
+
+    schedule = torch.profiler.schedule(wait=1, warmup=1, active=2, repeat=1)
+    prof = profile(activities=activities, record_shapes=True, schedule=schedule, profile_memory=True)
+    prof.start()
+
     for epoch in range(NUM_EPOCHS):
 
         log(accelerator, f"Epoch {epoch + 1}/{NUM_EPOCHS} started")
@@ -207,9 +217,19 @@ def main():
                 log(accelerator, "Saved checkpoint: best_model.pt")
 
         log(accelerator, f"Epoch {epoch + 1}/{NUM_EPOCHS} finished")
+        prof.step()
 
     log(accelerator, "Training completed")
     log(accelerator, f"Best validation accuracy: {best_val_acc:.4f}")
+
+    os.makedirs(args.trace_dir, exist_ok=True)
+    prof.export_chrome_trace(f"{args.trace_dir}/cuda_pt_2p8-{RANK}-of-{SIZE}.json")
+    output_path = f"{args.trace_dir}/cuda_pt_2p8_self_cuda_time_total-{RANK}-of-{SIZE}.txt"
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+
+    with open(output_path, "w") as f:
+    f.write(prof.key_averages().table(
+        sort_by="cuda_time_total", row_limit=-1))
 
 
 if __name__ == "__main__":
