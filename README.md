@@ -19,3 +19,7 @@ Extends PyTorch DDP across multiple machines. Each node runs multiple GPU proces
 ## Multi-GPU PyTorch on multiple nodes using Hugging Face Accelerate
 
 Uses Hugging Face Accelerate to abstract multi-node DDP complexity. It manages node discovery, process spawning, and distributed configuration automatically, allowing scalable training across clusters with minimal manual setup while still relying on PyTorch DDP under the hood.
+
+## PyTorch Profiling
+
+The training code integrates the PyTorch Profiler to capture both CPU and CUDA execution traces. Profiling outputs include Chrome trace (`.json`) files for timeline visualization in Chrome Trace Viewer or Perfetto, along with text summaries of operator-level performance metrics such as CUDA execution time, CPU time, memory usage, and kernel statistics. These profiles help identify bottlenecks, optimize kernel execution, and analyze GPU utilization during distributed training.
