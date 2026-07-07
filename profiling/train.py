@@ -17,6 +17,9 @@ from torch.utils.data import DataLoader
 
 from config import (
     SAVE_PATH
+)
+
+from config import (
     PROFILE_PATH
 )
 
@@ -257,12 +260,12 @@ def main():
     #
     # ------------------------------------------------------------------
     prof.export_chrome_trace(
-        f"{PROFILE_PATH}/cuda_pt_2p8-{RANK}-of-{SIZE}.json"
+        f"{PROFILE_PATH}/profile-{accelerator.process_index}-profileop.json"
     )
 
     # Save the profiling summary.
     with open(
-        f"{PROFILE_PATH}/profiler-output-{RANK}-of-{SIZE}.txt",
+        f"{PROFILE_PATH}/profile-{accelerator.process_index}-profileop.txt",
         "w",
     ) as f:
         f.write(
