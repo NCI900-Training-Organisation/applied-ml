@@ -17,6 +17,7 @@ from torch.utils.data import DataLoader
 
 from config import (
     SAVE_PATH
+    PROFILE_PATH
 )
 
 
@@ -151,10 +152,31 @@ def main():
 
     log(accelerator, f"Beginning training for {NUM_EPOCHS} epochs")
 
-    activities=[ProfilerActivity.CPU, ProfilerActivity.CUDA]
+    # ------------------------------------------------------------------
+    # Specify which devices/activities to profile.
+    # CPU   -> Records execution time of CPU operations.
+    # CUDA  -> Records execution time of GPU kernels and CUDA activities.
+    # ------------------------------------------------------------------
+    activities = [ProfilerActivity.CPU, ProfilerActivity.CUDA]
 
-    schedule = torch.profiler.schedule(wait=1, warmup=1, active=2, repeat=1)
+    # ------------------------------------------------------------------
+    # Configure the profiling schedule.
+    #
+    # wait=1    : Skip profiling for the first iteration.
+    # warmup=1  : Profile the second iteration but discard the results
+    #             (allows CUDA initialization and caching to settle).
+    # active=2  : Record profiling data for the next two iterations.
+    # repeat=1  : Perform this profiling cycle only once.
+    # ------------------------------------------------------------------
+    schedule = torch.profiler.schedule(
+        wait=1,
+        warmup=1,
+        active=2,
+        repeat=1
+    )
     prof = profile(activities=activities, record_shapes=True, schedule=schedule, profile_memory=True)
+
+    # Start the profiler
     prof.start()
 
     for epoch in range(NUM_EPOCHS):
@@ -217,19 +239,38 @@ def main():
                 log(accelerator, "Saved checkpoint: best_model.pt")
 
         log(accelerator, f"Epoch {epoch + 1}/{NUM_EPOCHS} finished")
+
+        # Notify the profiler that one scheduled profiling step has completed.
+        # This advances the profiler through the wait, warmup, and active
+        # phases defined in the profiling schedule.
+
         prof.step()
 
     log(accelerator, "Training completed")
     log(accelerator, f"Best validation accuracy: {best_val_acc:.4f}")
 
-    os.makedirs(args.trace_dir, exist_ok=True)
-    prof.export_chrome_trace(f"{args.trace_dir}/cuda_pt_2p8-{RANK}-of-{SIZE}.json")
-    output_path = f"{args.trace_dir}/cuda_pt_2p8_self_cuda_time_total-{RANK}-of-{SIZE}.txt"
-    os.makedirs(os.path.dirname(output_path), exist_ok=True)
 
-    with open(output_path, "w") as f:
-    f.write(prof.key_averages().table(
-        sort_by="cuda_time_total", row_limit=-1))
+    # ------------------------------------------------------------------
+    # Export the collected profiling data as a Chrome trace (.json).
+    #
+    # The generated file can be opened with Perfetto or Chrome Trace Viewer.
+    #
+    # ------------------------------------------------------------------
+    prof.export_chrome_trace(
+        f"{PROFILE_PATH}/cuda_pt_2p8-{RANK}-of-{SIZE}.json"
+    )
+
+    # Save the profiling summary.
+    with open(
+        f"{PROFILE_PATH}/profiler-output-{RANK}-of-{SIZE}.txt",
+        "w",
+    ) as f:
+        f.write(
+            prof.key_averages().table(
+                sort_by="cuda_time_total",
+                row_limit=-1,
+            )
+        )
 
 
 if __name__ == "__main__":

@@ -27,3 +27,4 @@ MAX_IMAGES_PER_CLASS = 50
 # Checkpoint path
 
 SAVE_PATH = f"/scratch/vp91/{os.environ['USER']}/applied-ml/job_script/pneumonia_model_acc.pt"
+PROFILE_PATH = f"/scratch/vp91/{os.environ['USER']}/applied-ml/job_script"
