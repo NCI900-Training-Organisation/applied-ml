@@ -23,3 +23,10 @@ Uses Hugging Face Accelerate to abstract multi-node DDP complexity. It manages n
 ## PyTorch Profiling
 
 The training code integrates the PyTorch Profiler to capture both CPU and CUDA execution traces. Profiling outputs include Chrome trace (`.json`) files for timeline visualization in Chrome Trace Viewer or Perfetto, along with text summaries of operator-level performance metrics such as CUDA execution time, CPU time, memory usage, and kernel statistics. These profiles help identify bottlenecks, optimize kernel execution, and analyze GPU utilization during distributed training.
+
+
+## Useful Links
+
+[Bridges-2 OnDemand](https://ondemand.bridges2.psc.edu)
+
+[Bridges-2 User Guide](https://www.psc.edu/resources/bridges-2/user-guide)
