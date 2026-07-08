@@ -1,0 +1,132 @@
+Starting Accelerate training...
+The following values were not passed to `accelerate launch` and had defaults used instead:
+		More than one GPU was found, enabling multi-GPU training.
+		If this was unintended please pass in `--num_processes=1`.
+	`--num_machines` was set to a value of `1`
+	`--mixed_precision` was set to a value of `'no'`
+	`--dynamo_backend` was set to a value of `'no'`
+To avoid this warning pass in values for each of the problematic parameters or run `accelerate config`.
+Detected kernel version 4.18.0, which is below the recommended minimum of 5.5.0; this can cause the process to hang. It is recommended to upgrade the kernel to the minimum version or higher.
+Starting training job
+Number of processes: 2
+Mixed precision: fp16
+Creating datasets
+Dataset sizes | train=100 val=16 test=100
+Creating dataloaders
+Dataloaders ready | batch_size=32
+Initializing model
+Optimizer: Adam (lr=0.001)
+Preparing objects with Accelerate
+v006:33078:33078 [0] NCCL INFO Bootstrap : Using ib0:10.8.10.255<0>
+v006:33078:33078 [0] NCCL INFO NET/Plugin : Plugin load (libnccl-net.so) returned 2 : libnccl-net.so: cannot open shared object file: No such file or directory
+v006:33078:33078 [0] NCCL INFO NET/Plugin : No plugin found, using internal implementation
+v006:33078:33078 [0] NCCL INFO cudaDriverVersion 12060
+NCCL version 2.18.6+cuda11.8
+v006:33079:33079 [1] NCCL INFO cudaDriverVersion 12060
+v006:33079:33079 [1] NCCL INFO Bootstrap : Using ib0:10.8.10.255<0>
+v006:33079:33079 [1] NCCL INFO NET/Plugin : Plugin load (libnccl-net.so) returned 2 : libnccl-net.so: cannot open shared object file: No such file or directory
+v006:33079:33079 [1] NCCL INFO NET/Plugin : No plugin found, using internal implementation
+v006:33078:33111 [0] NCCL INFO NET/IB : Using [0]mlx5_0:1/IB [1]mlx5_1:1/IB [2]mlx5_2:1/IB [3]mlx5_3:1/IB [RO]; OOB ib0:10.8.10.255<0>
+v006:33078:33111 [0] NCCL INFO Using network IB
+v006:33079:33112 [1] NCCL INFO NET/IB : Using [0]mlx5_0:1/IB [1]mlx5_1:1/IB [2]mlx5_2:1/IB [3]mlx5_3:1/IB [RO]; OOB ib0:10.8.10.255<0>
+v006:33079:33112 [1] NCCL INFO Using network IB
+v006:33078:33111 [0] NCCL INFO comm 0x77b6d00 rank 0 nranks 2 cudaDev 0 nvmlDev 0 busId 15000 commId 0x184ee3be0bc3e4af - Init START
+v006:33079:33112 [1] NCCL INFO comm 0x789f5c0 rank 1 nranks 2 cudaDev 1 nvmlDev 1 busId 8a000 commId 0x184ee3be0bc3e4af - Init START
+v006:33079:33112 [1] NCCL INFO Setting affinity for GPU 1 to fe700000
+v006:33079:33112 [1] NCCL INFO Trees [0] -1/-1/-1->1->0 [1] 0/-1/-1->1->-1
+v006:33078:33111 [0] NCCL INFO Channel 00/02 :    0   1
+v006:33079:33112 [1] NCCL INFO P2P Chunksize set to 131072
+v006:33078:33111 [0] NCCL INFO Channel 01/02 :    0   1
+v006:33078:33111 [0] NCCL INFO Trees [0] 1/-1/-1->0->-1 [1] -1/-1/-1->0->1
+v006:33078:33111 [0] NCCL INFO P2P Chunksize set to 131072
+v006:33078:33111 [0] NCCL INFO Channel 00/0 : 1[1] -> 0[0] [receive] via NET/IB/0/GDRDMA
+v006:33079:33112 [1] NCCL INFO Channel 00/0 : 0[0] -> 1[1] [receive] via NET/IB/2/GDRDMA
+v006:33078:33111 [0] NCCL INFO Channel 01/0 : 1[1] -> 0[0] [receive] via NET/IB/0/GDRDMA
+v006:33079:33112 [1] NCCL INFO Channel 01/0 : 0[0] -> 1[1] [receive] via NET/IB/2/GDRDMA
+v006:33078:33111 [0] NCCL INFO Channel 00/0 : 0[0] -> 1[1] [send] via NET/IB/0/GDRDMA
+v006:33079:33112 [1] NCCL INFO Channel 00/0 : 1[1] -> 0[0] [send] via NET/IB/2/GDRDMA
+v006:33078:33111 [0] NCCL INFO Channel 01/0 : 0[0] -> 1[1] [send] via NET/IB/0/GDRDMA
+v006:33079:33112 [1] NCCL INFO Channel 01/0 : 1[1] -> 0[0] [send] via NET/IB/2/GDRDMA
+v006:33079:33112 [1] NCCL INFO Connected all rings
+v006:33079:33112 [1] NCCL INFO Connected all trees
+v006:33079:33112 [1] NCCL INFO threadThresholds 8/8/64 | 16/8/64 | 512 | 512
+v006:33079:33112 [1] NCCL INFO 2 coll channels, 0 nvls channels, 2 p2p channels, 2 p2p channels per peer
+v006:33078:33111 [0] NCCL INFO Connected all rings
+v006:33078:33111 [0] NCCL INFO Connected all trees
+v006:33078:33111 [0] NCCL INFO threadThresholds 8/8/64 | 16/8/64 | 512 | 512
+v006:33078:33111 [0] NCCL INFO 2 coll channels, 0 nvls channels, 2 p2p channels, 2 p2p channels per peer
+v006:33079:33112 [1] NCCL INFO comm 0x789f5c0 rank 1 nranks 2 cudaDev 1 nvmlDev 1 busId 8a000 commId 0x184ee3be0bc3e4af - Init COMPLETE
+v006:33078:33111 [0] NCCL INFO comm 0x77b6d00 rank 0 nranks 2 cudaDev 0 nvmlDev 0 busId 15000 commId 0x184ee3be0bc3e4af - Init COMPLETE
+Accelerate preparation complete
+Beginning training for 12 epochs
+Epoch 1/12 started
+Epoch 1: training complete (loss=1.2615, acc=0.4609)
+Epoch 1: validation complete (loss=0.6949, acc=0.5000)
+Epoch 1: Train=1.2615 Val=0.6949 Acc=0.5000
+Validation accuracy improved 0.0000 -> 0.5000
+Saved checkpoint: best_model.pt
+Epoch 1/12 finished
+Epoch 2/12 started
+Epoch 2: training complete (loss=1.7608, acc=0.4922)
+Epoch 2: validation complete (loss=0.7097, acc=0.5000)
+Epoch 2: Train=1.7608 Val=0.7097 Acc=0.5000
+Epoch 2/12 finished
+STAGE:2026-07-08 00:08:22 33079:33079 ActivityProfilerController.cpp:312] Completed Stage: Warm UpSTAGE:2026-07-08 00:08:22 33078:33078 ActivityProfilerController.cpp:312] Completed Stage: Warm Up
+
+Epoch 3/12 started
+Epoch 3: training complete (loss=1.2306, acc=0.4922)
+Epoch 3: validation complete (loss=0.7164, acc=0.5000)
+Epoch 3: Train=1.2306 Val=0.7164 Acc=0.5000
+Epoch 3/12 finished
+Epoch 4/12 started
+Epoch 4: training complete (loss=0.6577, acc=0.7344)
+Epoch 4: validation complete (loss=0.7487, acc=0.5000)
+Epoch 4: Train=0.6577 Val=0.7487 Acc=0.5000
+Epoch 4/12 finished
+STAGE:2026-07-08 00:08:24 33078:33078 ActivityProfilerController.cpp:318] Completed Stage: Collection
+STAGE:2026-07-08 00:08:24 33079:33079 ActivityProfilerController.cpp:318] Completed Stage: Collection
+STAGE:2026-07-08 00:08:24 33079:33079 ActivityProfilerController.cpp:322] Completed Stage: Post ProcessingSTAGE:2026-07-08 00:08:24 33078:33078 ActivityProfilerController.cpp:322] Completed Stage: Post Processing
+
+Epoch 5/12 started
+Epoch 5: training complete (loss=0.5248, acc=0.8281)
+Epoch 5: validation complete (loss=0.9918, acc=0.5000)
+Epoch 5: Train=0.5248 Val=0.9918 Acc=0.5000
+Epoch 5/12 finished
+Epoch 6/12 started
+Epoch 6: training complete (loss=0.4365, acc=0.7969)
+Epoch 6: validation complete (loss=1.4105, acc=0.5000)
+Epoch 6: Train=0.4365 Val=1.4105 Acc=0.5000
+Epoch 6/12 finished
+Epoch 7/12 started
+Epoch 7: training complete (loss=0.4042, acc=0.8281)
+Epoch 7: validation complete (loss=1.6698, acc=0.5000)
+Epoch 7: Train=0.4042 Val=1.6698 Acc=0.5000
+Epoch 7/12 finished
+Epoch 8/12 started
+Epoch 8: training complete (loss=0.3400, acc=0.8438)
+Epoch 8: validation complete (loss=1.8861, acc=0.5000)
+Epoch 8: Train=0.3400 Val=1.8861 Acc=0.5000
+Epoch 8/12 finished
+Epoch 9/12 started
+Epoch 9: training complete (loss=0.3755, acc=0.8672)
+Epoch 9: validation complete (loss=2.2420, acc=0.5000)
+Epoch 9: Train=0.3755 Val=2.2420 Acc=0.5000
+Epoch 9/12 finished
+Epoch 10/12 started
+Epoch 10: training complete (loss=0.3231, acc=0.8828)
+Epoch 10: validation complete (loss=2.8845, acc=0.5000)
+Epoch 10: Train=0.3231 Val=2.8845 Acc=0.5000
+Epoch 10/12 finished
+Epoch 11/12 started
+Epoch 11: training complete (loss=0.3202, acc=0.8438)
+Epoch 11: validation complete (loss=3.5930, acc=0.5000)
+Epoch 11: Train=0.3202 Val=3.5930 Acc=0.5000
+Epoch 11/12 finished
+Epoch 12/12 started
+Epoch 12: training complete (loss=0.2864, acc=0.8750)
+Epoch 12: validation complete (loss=4.2837, acc=0.5000)
+Epoch 12: Train=0.2864 Val=4.2837 Acc=0.5000
+Epoch 12/12 finished
+Training completed
+Best validation accuracy: 0.5000
+Job done.

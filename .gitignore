@@ -225,5 +225,9 @@ job_script/pneumonia_model*.pt
 
 job_script/*.o*
 job_script/*.e*
+job_script/*.out
 
 job_script/*profileop*
+
+
+

@@ -41,14 +41,27 @@ python3 -m pip install --upgrade pip
 
 Install Jupyter and all project dependencies. It is imoportant that the installtion happen in the same order as shown below. 
 
-
+### On Gadi
 
 ```bash
 python3 -m pip install     jupyter==1.1.1     jupyterlab==4.2.5     numpy==1.26.4     pandas==2.2.2     matplotlib==3.8.4     seaborn==0.13.2     opencv-python==4.10.0.84     scikit-learn==1.5.1     --no-cache-dir
 
 python3 -m pip install torch==2.1.2+cu118 torchvision==0.16.2+cu118 torchaudio==2.1.2+cu118 --index-url https://download.pytorch.org/whl/cu118 --no-cache-dir
 
-python3 -m pip install accelerate==0.33.0 --no-deps --no-cache-dir
+python3 -m pip install accelerate==0.33.0 --no-cache-dir
+```
+
+### On Bridge-2
+
+```bash
+
+python3 -m pip install numpy==1.24.4     pandas==2.0.3     matplotlib==3.7.5     seaborn==0.13.2     opencv-python==4.10.0.84     scikit-learn==1.3.2     --no-cache-dir
+
+python3 -m pip install torch==2.1.2+cu118 torchvision==0.16.2+cu118 torchaudio==2.1.2+cu118 --index-url https://download.pytorch.org/whl/cu118 --no-cache-dir
+
+python3 -m pip install accelerate==0.33.0  
+
+
 ```
 
 You can check the version of the PyTorch version using

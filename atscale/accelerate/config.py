@@ -2,7 +2,11 @@ import os
 
 # Dataset
 
-DATA_ROOT = "/g/data/vp91/Training-Data/chest_xray"
+#gadi
+#DATA_ROOT = "/g/data/vp91/Training-Data/chest_xray"
+
+#bridge-2
+DATA_ROOT = "/ocean/projects/tra210016p/jjohn2/chest_xray"
 
 LABELS = [
     "PNEUMONIA",
@@ -25,5 +29,8 @@ LR = 1e-3
 MAX_IMAGES_PER_CLASS = 50
 
 # Checkpoint path
+#gadi
+#SAVE_PATH = f"/scratch/vp91/{os.environ['USER']}/applied-ml/job_script/pneumonia_model_acc.pt"
 
-SAVE_PATH = f"/scratch/vp91/{os.environ['USER']}/applied-ml/job_script/pneumonia_model_acc.pt"
+#bridge-2
+SAVE_PATH = f"{os.environ['PROJECT']}/applied-ml/job_script/pneumonia_model_acc.pt"
