@@ -30,3 +30,57 @@ The training code integrates the PyTorch Profiler to capture both CPU and CUDA e
 [Bridges-2 OnDemand](https://ondemand.bridges2.psc.edu)
 
 [Bridges-2 User Guide](https://www.psc.edu/resources/bridges-2/user-guide)
+
+## Bridges-2 Setup and Data Transfer
+
+### Connect to Bridges-2
+
+```bash
+ssh <username>@bridges2.psc.edu
+```
+
+### List Projects
+
+```bash
+projects
+```
+
+### Check Environment Variables
+
+```bash
+echo $HOME
+echo $PROJECT
+echo $LOCAL
+```
+
+
+### Check Slurm Jobs
+
+```bash
+squeue -u $USER
+```
+
+### Load Python and CUDA Modules
+
+```bash
+module load python/3.8.6
+module load cuda/12.6.1
+```
+
+
+### Activate the Virtual Environment
+
+```bash
+source /ocean/projects/tra210016p/jjohn2/pytorch-venv
+```
+
+
+### Transfer the Dataset to Bridges-2
+
+Use `rsync` to copy the `chest_xray` dataset to the project directory on Bridges-2.
+
+```bash
+rsync -rltpDvp -e 'ssh -l jjohn2' ./chest_xray \
+    data.bridges2.psc.edu:/ocean/projects/tra210016p/jjohn2/
+```
+
