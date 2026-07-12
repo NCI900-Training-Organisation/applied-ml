@@ -1,4 +1,3 @@
-
 import os
 
 # Dataset
@@ -31,7 +30,7 @@ MAX_IMAGES_PER_CLASS = 50
 
 # Checkpoint path
 #gadi
-#SAVE_PATH = f"/scratch/vp91/{os.environ['USER']}/applied-ml/job_script/pneumonia_model_acc.pt"
+#SAVE_PATH = f"/scratch/vp91/{os.environ['USER']}/applied-ml/job_script/pneumonia_model_ddp.pt"
 
 #bridge-2
-SAVE_PATH = f"{os.environ['PROJECT']}/applied-ml/job_script/pneumonia_model_acc.pt"
+SAVE_PATH = f"{os.environ['PROJECT']}/applied-ml/job_script/pneumonia_model_ddp.pt"
