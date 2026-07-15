@@ -3,6 +3,11 @@
 **Duration:** ~40 minutes
 
 This tutorial builds conceptual foundations before the hands-on [workshop.ipynb](workshop.ipynb) session. You will learn *how* a standard ML project is structured, and *what* happens inside a neural network.
+- Define core neural network concepts — input/hidden/output layers, weights, bias, etc.  
+- Compare the strengths and limitations of common architectures for a given data type and task.  
+- Analyse train/validation/test learning curves and loss trends to diagnose underfitting, overfitting, or unstable training (e.g. diverging loss from a learning rate that is too large).  
+- Implement a supervised learning workflow in PyTorch on a chest X-ray pneumonia classification task.  
+
 
 > **Next step:** After this tutorial, run [workshop.ipynb](workshop.ipynb) to apply the workflow to a CNN on chest X-rays.
 
@@ -190,7 +195,7 @@ Linear regression is the simplest case: one weighted sum plus bias. Deep network
 ## Part 6 — Choosing NN Architecture
 
 **Common Architectures**  
-
+> These mapping to science applications are not strict or comprehensive. This only provides one of the way to navigate the various architectures.
 
 | Architecture   | Best for                  | Science use cases                                                     |
 | -------------- | ------------------------- | --------------------------------------------------------------------- |
