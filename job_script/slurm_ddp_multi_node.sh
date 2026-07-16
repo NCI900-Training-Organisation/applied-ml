@@ -1,58 +1,96 @@
 #!/bin/bash
+#SBATCH -J ddp_multi_train
+#SBATCH -N 2
+#SBATCH -p GPU
+#SBATCH -t 00:15:00
+#SBATCH --gpus=v100-32:16
 
-# Load shell environment variables
-source ~/.bashrc
+set -euo pipefail
 
-module load python3/3.11.0
-module load cuda/11.7.0
-module load intel-mkl/2022.2.0
+module purge
+module load cuda/12.6.1
 
-source /scratch/vp91/pytorch-venv/bin/activate
- 
-export USER=$(whoami)
+export PYTHONUNBUFFERED=1
+export NCCL_DEBUG=INFO
+export TORCH_DISTRIBUTED_DEBUG=DETAIL
+export OMP_NUM_THREADS=4
 
-# Run PyTorch application
+# Activate your Python environment
+source /ocean/projects/tra210016p/jjohn2/pytorch-venv/bin/activate
+
+# Move to your project directory
+cd "$PROJECT/applied-ml"
+
+NNODES=2
+PROC_PER_NODE=8
+
+MASTER_ADDR=$(scontrol show hostnames "$SLURM_JOB_NODELIST" | head -n 1)
+MASTER_PORT=29400
+
+echo "Master address    : ${MASTER_ADDR}"
+echo "Master port       : ${MASTER_PORT}"
+echo "Number of nodes   : ${NNODES}"
+echo "Processes/node    : ${PROC_PER_NODE}"
+
+srun --ntasks-per-node=1 bash -c '
+echo "Host              : $(hostname)"
+echo "Node rank         : ${SLURM_NODEID}"
+'
+
+echo "Starting DDP training..."
+
+# Run PyTorch DDP application
 # ------------------------------------------------------------
 # DISTRIBUTED TRAINING LAUNCH (torchrun - DDP)
 # ------------------------------------------------------------
 #
-# torchrun is the official launcher for PyTorch Distributed
-# Data Parallel (DDP) training. It starts multiple processes (one per GPU) and handles
-# communication between them automatically.
+# srun starts one torchrun launcher on each compute node.
 #
-# --nnodes=${1}
-#   Number of compute nodes (machines) participating
-#   in distributed training.
+# torchrun then starts one training process per GPU on the
+# current node.
 #
-# --nproc_per_node=${2}
-#   Number of processes per node.
-#   Typically equals number of GPUs on that node.
+# --nnodes ${NNODES}
+#   Total number of compute nodes participating in training.
 #
 #   Example:
-#     4 GPUs → 4 processes
+#     2 nodes
 #
-# --rdzv_id=100
-#   Unique ID for this distributed job.
-#   Used to identify and group all participating processes.
+# --nproc_per_node ${PROC_PER_NODE}
+#   Number of training processes started on each node.
+#   Typically equals the number of GPUs per node.
 #
-# --rdzv_backend=c10d
-#   Rendezvous backend used for process coordination.
-#   c10d is PyTorch’s default distributed communication backend.
+#   Example:
+#     8 GPUs/node -> 8 processes/node
 #
-# --rdzv_endpoint=${3}:29400
-#   Address of the master node (rank 0) and port used
-#   for process coordination (rendezvous server).
+# --node_rank ${SLURM_NODEID}
+#   Unique rank assigned to the current compute node.
+#   SLURM_NODEID provides the node rank automatically.
 #
-# script: /scratch/vp91/$USER/applied-ml/atscale/ddp/train.py
+#   Example:
+#     Node 1 -> rank 0
+#     Node 2 -> rank 1
 #
-# This is the training script executed independently
-# by each spawned process. Each process runs the same
-# code but operates on a different GPU and data shard.
+# --rdzv_id ${SLURM_JOB_ID}
+#   Unique identifier for the distributed training job.
+#   The Slurm job ID prevents rendezvous conflicts between jobs.
+#
+# --rdzv_backend c10d
+#   Uses PyTorch's c10d rendezvous backend for distributed
+#   process coordination.
+#
+# --rdzv_endpoint ${MASTER_ADDR}:${MASTER_PORT}
+#   Address of the rendezvous node.
+#   All nodes connect to this address before training starts.
+#
 # ------------------------------------------------------------
-torchrun \
-  --nnodes=${1} \
-  --nproc_per_node=${2} \
-  --rdzv_id=100 \
-  --rdzv_backend=c10d \
-  --rdzv_endpoint=${3}:29400 \
-  /scratch/vp91/$USER/applied-ml/atscale/ddp/train.py
+
+srun --ntasks-per-node=1 torchrun \
+    --nnodes=${NNODES} \
+    --nproc_per_node=${PROC_PER_NODE} \
+    --node_rank=${SLURM_NODEID} \
+    --rdzv_id=${SLURM_JOB_ID} \
+    --rdzv_backend=c10d \
+    --rdzv_endpoint=${MASTER_ADDR}:${MASTER_PORT} \
+    atscale/ddp/train.py
+
+echo "Job done."
